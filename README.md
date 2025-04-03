@@ -1,6 +1,10 @@
-# 岛风酱我是你的粉丝啊
+# 二次元图片下载器
 
-![Build Status](https://github.com/你的用户名/仓库名/workflows/Build%20and%20Release%20Electron%20App/badge.svg)
+这是我的最早的一个开源项目，所以我想间或维持其更新。
+
+---
+
+![Build Status](https://github.com/ZhaoCake/amine_image_downloader/workflows/Build%20and%20Release%20Electron%20App/badge.svg)
 
 一个专注于二次元图片的现代化下载浏览器。
 

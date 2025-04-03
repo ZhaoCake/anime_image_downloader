@@ -1,6 +1,6 @@
 {
   "name": "islandwind-imyourfans",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "An Electron app featuring image fetching, Weibo hot topics, and translation",
   "main": "main.js",
   "scripts": {
@@ -35,7 +35,7 @@
           "target": "portable"
         }
       ],
-      "icon": "assets/asuka.jpg"
+      "icon": "assets/app-icon.png"
     },
     "nsis": {
       "oneClick": false,
@@ -49,11 +49,11 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/asuka.jpg"
+      "icon": "assets/app-icon.png"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "assets/asuka.jpg"
+      "icon": "assets/app-icon.png"
     }
   }
 }

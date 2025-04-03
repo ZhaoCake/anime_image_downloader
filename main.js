@@ -17,7 +17,7 @@ function createWindow() {
       contextIsolation: false,
       enableRemoteModule: true
     },
-    icon: path.join(__dirname, 'assets/asuka.jpg')
+    icon: path.join(__dirname, 'assets/app-icon.png')
   });
 
   mainWindow.loadFile('index.html');
