@@ -8,6 +8,9 @@
 
 一个专注于二次元图片的现代化下载浏览器。
 
+![效果展示1](assets/screenshot18.png)
+![效果展示2](assets/screenshot19.png)
+
 ## 🌟 特色功能
 
 - 📸 多种二次元图片分类
