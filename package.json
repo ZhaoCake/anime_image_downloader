@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --debug",
-    "build": "electron-builder"
+    "build": "electron-builder --win --publish never",
+    "publish": "electron-builder --win --publish always"
   },
   "author": "",
   "license": "ISC",
@@ -19,11 +20,32 @@
     "sharp": "^0.32.6"
   },
   "build": {
-    "appId": "com.islandwind.app",
-    "productName": "IslandWind App",
+    "appId": "com.islandwind.imyourfans",
+    "productName": "岛风酱我是你的粉丝啊",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable"
+        }
+      ],
       "icon": "assets/asuka.jpg"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
     },
     "mac": {
       "target": "dmg",
