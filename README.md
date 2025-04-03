@@ -45,3 +45,21 @@
 ## 🖼️ 数据来源
 
 本程序的图片数据由 [api.iw233.cn](https://api.iw233.cn) 提供支持。
+
+## 📦 发布新版本
+
+1. 更新 package.json 中的版本号
+2. 提交并推送代码
+3. 创建新标签：
+
+```bash
+git tag -a vX.X.X -m "版本说明"
+```
+
+4. 推送标签：
+
+```bash
+git push origin vX.X.X
+```
+
+5. 等待 GitHub Actions 自动构建并发布
