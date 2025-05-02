@@ -12,8 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        os: [windows-latest]
-        # 如果需要支持多平台，可以添加: macos-latest, ubuntu-latest
+        os: [windows-latest, ubuntu-latest]
 
     steps:
       - name: Check out Git repository
@@ -27,18 +26,42 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      # Install required dependencies for Linux builds
+      - name: Install Linux Dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xvfb
+
       - name: Build Electron App
         run: npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Rename artifacts based on OS
+      - name: Rename Windows artifacts
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd dist
+          ls -la
+          # Keep this command for logging purposes
+
+      - name: Rename Linux artifacts
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd dist
+          ls -la
+          # Keep this command for logging purposes
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             dist/*.exe
-            dist/*.dmg
+            dist/*.appimage
             dist/*.AppImage
+            dist/*.zip
+            dist/*.dmg
           draft: false
           prerelease: false
         env:

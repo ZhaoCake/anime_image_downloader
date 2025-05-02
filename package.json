@@ -1,13 +1,13 @@
 {
   "name": "islandwind-imyourfans",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An Electron app featuring image fetching, Weibo hot topics, and translation",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --debug",
-    "build": "electron-builder --win --publish never",
-    "publish": "electron-builder --win --publish always"
+    "build": "electron-builder --publish never",
+    "publish": "electron-builder --publish always"
   },
   "author": "",
   "license": "ISC",
@@ -21,8 +21,8 @@
   },
   "build": {
     "appId": "com.islandwind.imyourfans",
-    "productName": "岛风酱我是你的粉丝啊",
-    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "productName": "AnimeImageDownloader",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "win": {
       "target": [
         {
@@ -52,8 +52,10 @@
       "icon": "assets/app-icon.png"
     },
     "linux": {
-      "target": "AppImage",
-      "icon": "assets/app-icon.png"
+      "target": ["AppImage", "deb"],
+      "category": "Graphics",
+      "icon": "assets/app-icon.png",
+      "maintainer": "AnimeImageDownloader Maintainer"
     }
   }
 }
