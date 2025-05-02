@@ -120,7 +120,7 @@ ipcMain.handle('fetch-image', async (event, options) => {
         return { success: false, message: `获取图像内容失败: ${err.message}` };
       }
     } 
-    // 如果请求多张图片，返回所有图片数据
+    // 如果请求多张图片，并发返回所有图片数据
     else {
       let imageUrls = [];
       if (Array.isArray(response.data.pic)) {
@@ -132,34 +132,40 @@ ipcMain.handle('fetch-image', async (event, options) => {
         return { success: false, message: '获取图像URL格式错误' };
       }
       
-      console.log(`Processing ${imageUrls.length} images`);
-      const images = [];
+      console.log(`开始并发处理 ${imageUrls.length} 张图片`);
       
-      for (let i = 0; i < imageUrls.length; i++) {
+      // 使用Promise.all实现并发请求
+      const imagePromises = imageUrls.map(async (url, index) => {
         try {
-          const url = imageUrls[i];
-          console.log(`Fetching image ${i+1}/${imageUrls.length}:`, url);
+          console.log(`开始获取图片 ${index+1}/${imageUrls.length}:`, url);
           
           const imageResponse = await secureAxios.get(url, {
             responseType: 'arraybuffer'
           });
+          
           const imageData = Buffer.from(imageResponse.data, 'binary').toString('base64');
-          console.log(`Image ${i+1} fetched successfully`);
+          console.log(`图片 ${index+1} 获取成功，大小: ${imageResponse.data.length} 字节`);
           
           // 获取图像信息
           const imageInfo = await getImageInfo(imageResponse.data);
           
-          images.push({ 
+          return { 
             url, 
             data: imageData,
             info: imageInfo,
             filename: generateFilename(url, imageInfo)
-          });
+          };
         } catch (err) {
-          console.error('Error fetching individual image:', err);
-          // Continue with other images
+          console.error(`获取图片 ${index+1} 失败:`, err);
+          return null; // 返回null表示这张图片获取失败
         }
-      }
+      });
+      
+      // 等待所有请求完成
+      const results = await Promise.all(imagePromises);
+      
+      // 过滤掉失败的请求
+      const images = results.filter(result => result !== null);
       
       if (images.length === 0) {
         return { success: false, message: '所有图像获取失败' };
@@ -167,7 +173,9 @@ ipcMain.handle('fetch-image', async (event, options) => {
       
       return { 
         success: true, 
-        images
+        images,
+        totalRequested: imageUrls.length,
+        totalSuccess: images.length
       };
     }
   } catch (error) {
