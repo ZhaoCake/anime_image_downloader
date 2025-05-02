@@ -85,21 +85,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
-      # Rename artifacts based on OS
-      - name: Rename Windows artifacts
-        if: matrix.os == 'windows-latest'
-        run: |
-          cd dist
-          ls -la
-          # Keep this command for logging purposes
-
-      - name: Rename Linux artifacts
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          cd dist
-          ls -la
-          # Keep this command for logging purposes
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
