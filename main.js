@@ -59,7 +59,7 @@ const secureAxios = axios.create({
 // 获取图片API类型列表
 ipcMain.handle('get-image-categories', async () => {
   try {
-    const response = await secureAxios.get('https://api.iw233.cn/api.php?type=json');
+    const response = await secureAxios.get('https://api.cnmiw.com/api.php?type=json');
     if (response.data && response.data.sort_list) {
       const categories = response.data.sort_list;
       return { success: true, categories };
@@ -76,7 +76,7 @@ ipcMain.handle('get-image-categories', async () => {
 ipcMain.handle('fetch-image', async (event, options) => {
   try {
     const { imageType, count = 1 } = options;
-    const url = `https://api.iw233.cn/api.php?sort=${imageType}&type=json&num=${count}`;
+    const url = `https://api.cnmiw.com/api.php?sort=${imageType}&type=json&num=${count}`;
     
     console.log('Fetching images from:', url);
     
