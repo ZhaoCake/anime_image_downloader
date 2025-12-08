@@ -1,6 +1,6 @@
 {
   "name": "islandwind-imyourfans",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "An Electron app featuring image fetching, Weibo hot topics, and translation",
   "main": "main.js",
   "scripts": {

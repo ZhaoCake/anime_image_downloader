@@ -51,7 +51,7 @@
 
 ## 🖼️ 数据来源
 
-本程序的图片数据由 [api.cnmiw.com](https://api.cnmiw.com) 提供支持。
+本程序的图片数据由 [cnmiw.com](https://cnmiw.com) 提供支持。
 
 ## 📦 发布新版本
 
