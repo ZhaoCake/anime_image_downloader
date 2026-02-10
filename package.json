@@ -1,61 +1,12 @@
 {
-  "name": "islandwind-imyourfans",
-  "version": "0.1.4",
-  "description": "An Electron app featuring image fetching, Weibo hot topics, and translation",
-  "main": "main.js",
+  "name": "anime-image-downloader",
+  "version": "0.1.0",
+  "description": "Anime Image Downloader (Rust + Tauri + Leptos)",
+  "private": true,
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --debug",
-    "build": "electron-builder --publish never",
-    "publish": "electron-builder --publish always"
+    "tauri": "tauri"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
-    "electron": "^28.2.0",
-    "electron-builder": "^24.9.0"
-  },
-  "dependencies": {
-    "axios": "^1.6.5",
-    "sharp": "^0.32.6"
-  },
-  "build": {
-    "appId": "com.islandwind.imyourfans",
-    "productName": "AnimeImageDownloader",
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable"
-        }
-      ],
-      "icon": "assets/app-icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "publish": {
-      "provider": "github",
-      "releaseType": "release"
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "assets/app-icon.png"
-    },
-    "linux": {
-      "target": ["AppImage", "deb"],
-      "category": "Graphics",
-      "icon": "assets/app-icon.png",
-      "maintainer": "AnimeImageDownloader Maintainer"
-    }
+    "@tauri-apps/cli": "^2.0.0"
   }
 }

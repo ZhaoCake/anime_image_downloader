@@ -11,6 +11,23 @@ dist/
 build/
 out/
 release/
+target/
+frontend/dist/
+src-tauri/target/
+
+# Rust/Trunk
+.cargo/
+.trunk/
+**/*.wasm
+**/*.d.ts
+**/*.js
+**/*.map
+**/*.tar.gz
+**/*.crate
+
+# Tauri
+src-tauri/tauri.conf.json~
+src-tauri/gen/
 
 # IDE and editor files
 .idea/
@@ -19,6 +36,11 @@ release/
 *.swo
 .DS_Store
 Thumbs.db
+
+# Nix/Direnv
+.direnv/
+.envrc.local
+result
 
 # Electron specific
 .electron-builder.env
