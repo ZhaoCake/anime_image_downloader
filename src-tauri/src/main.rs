@@ -1,6 +1,8 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 // Learn more about Tauri commands at https://tauri.app
 use base64::{engine::general_purpose, Engine as _};
 use image::GenericImageView;
+use reqwest::header::{HeaderMap, HeaderValue, REFERER, USER_AGENT};
 use serde::Serialize;
 use std::fs::File;
 use std::io::Write;
@@ -79,9 +81,14 @@ async fn get_image_categories() -> FetchResult {
 #[tauri::command]
 async fn fetch_image(image_type: String, count: Option<u32>) -> FetchResult {
     let count = count.unwrap_or(1);
+    let sort = if image_type.starts_with("CDN") {
+        image_type
+    } else {
+        format!("CDN{}", image_type)
+    };
     let url = format!(
         "https://cnmiw.com/api.php?sort={}&type=json&num={}",
-        image_type, count
+        sort, count
     );
 
     match reqwest::get(&url).await {
@@ -148,7 +155,15 @@ async fn fetch_image(image_type: String, count: Option<u32>) -> FetchResult {
 }
 
 async fn fetch_single_image(url: &str) -> Result<ImageData, Box<dyn std::error::Error>> {
-    let bytes = reqwest::get(url).await?.bytes().await?;
+    let mut headers = HeaderMap::new();
+    headers.insert(REFERER, HeaderValue::from_static("https://weibo.com/"));
+    headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0"));
+
+    let client = reqwest::Client::builder()
+        .default_headers(headers)
+        .build()?;
+
+    let bytes = client.get(url).send().await?.bytes().await?;
     let info = get_image_info(&bytes);
     let base64_data = general_purpose::STANDARD.encode(&bytes);
     let filename = generate_filename(url, &info);
