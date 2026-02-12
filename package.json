@@ -1,6 +1,6 @@
 {
   "name": "anime-image-downloader",
-  "version": "0.1.4",
+  "version": "0.2.2",
   "description": "Anime Image Downloader (Tauri + JS)",
   "private": true,
   "scripts": {
