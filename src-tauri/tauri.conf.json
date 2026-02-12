@@ -9,17 +9,20 @@
     "frontendDist": "../frontend"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Anime Image Downloader",
         "width": 1000,
         "height": 700,
         "minWidth": 800,
-        "minHeight": 600
+        "minHeight": 600,
+        "devtools": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": ["default"]
     }
   },
   "bundle": {
@@ -34,7 +37,7 @@
   },
   "plugins": {
       "shell": {
-          "open": true
+        "open": true
       }
   }
 }

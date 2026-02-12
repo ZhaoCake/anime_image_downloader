@@ -1,7 +1,64 @@
-import { open, save } from "@tauri-apps/plugin-dialog";
-import { writeFile } from "@tauri-apps/plugin-fs";
-import { dirname, join, pictureDir } from "@tauri-apps/api/path";
-import { open as openPath } from "@tauri-apps/plugin-shell";
+let tauri = {};
+let dialog = null;
+let fs = null;
+let http = null;
+let core = null;
+let shell = null;
+let pathApi = null;
+
+function refreshTauriApis() {
+  tauri = window.__TAURI__ || {};
+  dialog = tauri.dialog || null;
+  fs = tauri.fs || null;
+  http = tauri.http || null;
+  core = tauri.core || null;
+  shell = tauri.shell || null;
+  pathApi = tauri.path || null;
+}
+
+refreshTauriApis();
+window.addEventListener("tauri://ready", refreshTauriApis);
+
+const ResponseType = {
+  Json: "Json",
+  Binary: "Binary",
+  Text: "Text"
+};
+
+function ensureTauriApi() {
+  refreshTauriApis();
+  if (!dialog || !fs || !shell || !pathApi) {
+    throw new Error("Tauri runtime not available. Please run inside the Tauri window.");
+  }
+}
+
+function ensureTauriHttp() {
+  refreshTauriApis();
+  if ((http && http.fetch) || (core && core.invoke)) {
+    return;
+  }
+
+  throw new Error("Tauri HTTP plugin not available. Please run inside the Tauri window and rebuild.");
+}
+
+async function httpFetch(url, options) {
+  refreshTauriApis();
+  if (http && http.fetch) {
+    return http.fetch(url, options);
+  }
+
+  if (core && core.invoke) {
+    return core.invoke("plugin:http|fetch", {
+      url,
+      method: options.method || "GET",
+      headers: options.headers || {},
+      body: options.body,
+      responseType: options.responseType || ResponseType.Json
+    });
+  }
+
+  throw new Error("Tauri HTTP plugin not available. Run npm install and rebuild.");
+}
 
 let currentImages = [];
 let currentImageIndex = 0;
@@ -111,8 +168,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadImageCategories() {
     try {
-      const response = await fetch(`${apiBase}?type=json`);
-      const data = await response.json();
+      ensureTauriHttp();
+      const data = await httpFetchJson(`${apiBase}?type=json`);
       if (data && data.sort_list && Array.isArray(data.sort_list)) {
         while (imageTypeSelect.firstChild) {
           imageTypeSelect.removeChild(imageTypeSelect.firstChild);
@@ -144,10 +201,11 @@ document.addEventListener("DOMContentLoaded", () => {
     disableImageControls();
 
     try {
+      ensureTauriHttp();
       const requestCount = Math.min(Math.max(count, 1), 10);
-      const url = `${apiBase}?sort=${encodeURIComponent(imageType)}&type=json&num=${requestCount}`;
-      const response = await fetch(url);
-      const data = await response.json();
+      const sortValue = imageType.startsWith("CDN") ? imageType : `CDN${imageType}`;
+      const url = `${apiBase}?sort=${encodeURIComponent(sortValue)}&type=json&num=${requestCount}`;
+      const data = await httpFetchJson(url);
 
       let imageUrls = [];
       if (Array.isArray(data.pic)) {
@@ -376,17 +434,19 @@ document.addEventListener("DOMContentLoaded", () => {
   async function batchSaveSelectedImages() {
     if (selectedImages.size === 0) return;
 
+    ensureTauriApi();
+
     const saveFormat = saveFormatSelect.value;
     const useDefaultPath = defaultPathCheckbox.checked;
 
     let saveDir = null;
     if (!useDefaultPath) {
       try {
-        const result = await open({
+        const result = await dialog.open({
           title: "选择保存目录",
           directory: true,
           multiple: false,
-          defaultPath: await pictureDir()
+          defaultPath: await pathApi.pictureDir()
         });
 
         if (!result) return;
@@ -427,9 +487,9 @@ document.addEventListener("DOMContentLoaded", () => {
           filename = `${baseFilename}.${saveFormat}`;
         }
 
-        const targetDir = saveDir || await pictureDir();
-        const targetPath = await join(targetDir, filename);
-        await writeFile(targetPath, base64ToUint8Array(imageData));
+        const targetDir = saveDir || await pathApi.pictureDir();
+        const targetPath = await pathApi.join(targetDir, filename);
+        await fs.writeFile(targetPath, base64ToUint8Array(imageData));
 
         successCount++;
         lastSavedPath = targetPath;
@@ -523,6 +583,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function saveCurrentImage() {
     if (!currentImages || !currentImages[currentImageIndex]) return;
 
+    ensureTauriApi();
+
     const imageData = currentImages[currentImageIndex].data;
     const useDefaultPath = defaultPathCheckbox.checked;
     const saveFormat = saveFormatSelect.value;
@@ -536,12 +598,12 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       let targetPath = null;
       if (useDefaultPath) {
-        const pictures = await pictureDir();
-        targetPath = await join(pictures, filename);
+        const pictures = await pathApi.pictureDir();
+        targetPath = await pathApi.join(pictures, filename);
       } else {
-        targetPath = await save({
+        targetPath = await dialog.save({
           title: "保存图像",
-          defaultPath: await join(await pictureDir(), filename),
+          defaultPath: await pathApi.join(await pathApi.pictureDir(), filename),
           filters: [{ name: "Images", extensions: ["jpg", "png"] }]
         });
       }
@@ -550,7 +612,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      await writeFile(targetPath, base64ToUint8Array(imageData));
+      await fs.writeFile(targetPath, base64ToUint8Array(imageData));
       alert("图像保存成功！");
       lastSavedPath = targetPath;
       openFolderButton.disabled = false;
@@ -585,9 +647,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    ensureTauriApi();
+
     try {
-      const folderPath = await dirname(lastSavedPath);
-      await openPath(folderPath);
+      const folderPath = await pathApi.dirname(lastSavedPath);
+      await shell.open(folderPath);
     } catch (error) {
       console.error("Error opening folder:", error);
       alert("打开文件夹时出错");
@@ -770,10 +834,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function fetchImageData(url) {
   try {
-    const response = await fetch(url);
-    const buffer = await response.arrayBuffer();
+    const response = await httpFetch(url, {
+      method: "GET",
+      responseType: ResponseType.Binary,
+      headers: {
+        Referer: "https://weibo.com/"
+      }
+    });
+
+    console.log("Raw Image Response:", response); // Debug log
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    let rawData;
+    // Handle standard Fetch API
+    if (typeof response.arrayBuffer === 'function') {
+        rawData = await response.arrayBuffer();
+    } else {
+        // Handle Tauri response (v1 data, v2 body/payload?)
+        rawData = response.data !== undefined ? response.data : response.body;
+    }
+
+    if (rawData === undefined) {
+        // Fallback: maybe response IS the data if raw bytes? Unlikely for http wrapper
+        console.warn("No data/body in response, inspecting full object");
+        // If it's a binary response, sometimes its passed as payload.
+        // Assuming response structure is { body: ... } or { data: ... }
+        throw new Error("Empty response data");
+    }
+
+    const buffer = rawData instanceof Uint8Array || rawData instanceof ArrayBuffer 
+        ? new Uint8Array(rawData) 
+        : new Uint8Array(rawData); // works for number[]
+
     const base64 = arrayBufferToBase64(buffer);
-    const info = await getImageInfo(buffer, url, response.headers.get("content-type"));
+    const contentType = getHeaderValue(response.headers, "content-type");
+    const info = await getImageInfo(buffer, url, contentType);
 
     return {
       url,
@@ -785,6 +883,67 @@ async function fetchImageData(url) {
     console.error("Error fetching image content:", error);
     return null;
   }
+}
+
+async function httpFetchJson(url) {
+  ensureTauriHttp();
+  console.log(`Fetching ${url}...`);
+  const response = await httpFetch(url, {
+    method: "GET",
+    responseType: ResponseType.Json
+  });
+
+  console.log("Raw Fetch Response:", response);
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  // Handle standard Fetch API Response object (if using browser/polyfill)
+  if (typeof response.json === 'function') {
+      return await response.json();
+  }
+  
+  // Handle Tauri v1-style or raw invoke response object
+  if (response.data) {
+      return response.data;
+  }
+  
+  // Handle Tauri v2 raw invoke response (likely in 'body' or similar)
+  // If responseType was 'Json', it might be in 'data' but maybe the plugin didn't parse it?
+  // Let's inspect keys if we fail to find data
+  if (response.body) {
+      if (typeof response.body === 'string') {
+          try {
+            return JSON.parse(response.body);
+          } catch (e) {
+            console.warn("Failed to parse response body as JSON:", e);
+          }
+      }
+      return response.body;
+  }
+
+  // Fallback: return the whole response if we can't find a data property, 
+  // maybe the response IS the data? (Unlikely for http clients)
+  console.warn("Could not determine data property in response. Returning response object.");
+  return response;
+}
+
+function getHeaderValue(headers, name) {
+  if (!headers) return null;
+  const target = name.toLowerCase();
+
+  if (Array.isArray(headers)) {
+    const header = headers.find((entry) => entry.key && entry.key.toLowerCase() === target);
+    return header ? header.value : null;
+  }
+
+  if (headers[target]) {
+    return headers[target];
+  }
+
+  const matchKey = Object.keys(headers).find((key) => key.toLowerCase() === target);
+  return matchKey ? headers[matchKey] : null;
 }
 
 async function getImageInfo(buffer, url, contentType) {
@@ -864,7 +1023,7 @@ function generateFilename(url, imageInfo) {
 }
 
 function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   let binary = "";
   const chunkSize = 0x8000;
 

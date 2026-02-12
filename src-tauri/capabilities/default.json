@@ -1,0 +1,21 @@
+{
+  "identifier": "default",
+  "description": "Default permissions for the app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "http:default",
+    {
+      "identifier": "http:allow-fetch",
+      "allow": [
+        "https://cnmiw.com/*",
+        "https://setu.iw233.top/*",
+        "https://*.iw233.top/*"
+      ]
+    },
+    "dialog:default",
+    "fs:default",
+    "shell:default",
+    "core:webview:allow-internal-toggle-devtools"
+  ]
+}
