@@ -1,12 +1,23 @@
 {
   "name": "anime-image-downloader",
-  "version": "0.1.0",
-  "description": "Anime Image Downloader (Rust + Tauri + Leptos)",
+  "version": "0.1.4",
+  "description": "Anime Image Downloader (Tauri + JS)",
   "private": true,
   "scripts": {
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "frontend:dev": "http-server frontend -p 1421 -c-1",
+    "frontend:build": "node -e \"process.exit(0)\""
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.0.0"
+    "@tauri-apps/cli": "^2.0.0",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-fs": "^2.0.0",
+    "@tauri-apps/plugin-shell": "^2.0.0"
   }
 }

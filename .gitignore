@@ -19,9 +19,6 @@ src-tauri/target/
 .cargo/
 .trunk/
 **/*.wasm
-**/*.d.ts
-**/*.js
-**/*.map
 **/*.tar.gz
 **/*.crate
 

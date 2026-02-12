@@ -1,12 +1,12 @@
 {
   "productName": "AnimeImageDownloader",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "identifier": "com.islandwind.imyourfans",
   "build": {
-    "beforeDevCommand": "cd frontend && trunk serve --port 1421",
-    "beforeBuildCommand": "cd frontend && trunk build",
+    "beforeDevCommand": "npm run frontend:dev",
+    "beforeBuildCommand": "npm run frontend:build",
     "devUrl": "http://localhost:1421",
-    "frontendDist": "../frontend/dist"
+    "frontendDist": "../frontend"
   },
   "app": {
     "windows": [
