@@ -10,7 +10,7 @@ const { images, selectedImages, loading } = storeToRefs(store);
 </script>
 
 <template>
-  <div class="h-full overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-300 relative">
+  <div class="h-full w-full overflow-y-auto overflow-x-hidden p-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-300 relative backface-hidden">
     
     <div v-if="loading" class="absolute inset-0 z-50 flex items-center justify-center bg-white/50 dark:bg-black/50 backdrop-blur-sm">
         <Loader class="w-12 h-12 text-blue-600 animate-spin" />
@@ -80,5 +80,11 @@ const { images, selectedImages, loading } = storeToRefs(store);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
+}
+
+/* Fix for rendering glitches */
+.backface-hidden {
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 </style>
