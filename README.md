@@ -4,7 +4,9 @@
 
 ---
 
-一个专注于二次元图片的现代化下载浏览器（Tauri 桌面壳，核心逻辑回归 JavaScript）。
+一个专注于二次元图片的现代化下载浏览器（Tauri 桌面壳）。
+
+![v0.2.3](./assets/1ce626d652c446a79f174243e3652289.png)
 
 ## 🌟 特色功能
 
@@ -75,3 +77,4 @@ git push origin vX.X.X
 ```
 
 4. 等待 GitHub Actions 构建并发布
+
