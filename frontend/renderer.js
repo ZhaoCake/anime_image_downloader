@@ -3,17 +3,46 @@ let dialog = null;
 let fs = null;
 let http = null;
 let core = null;
-let shell = null;
 let pathApi = null;
 
 function refreshTauriApis() {
   tauri = window.__TAURI__ || {};
-  dialog = tauri.dialog || null;
-  fs = tauri.fs || null;
-  http = tauri.http || null;
   core = tauri.core || null;
-  shell = tauri.shell || null;
-  pathApi = tauri.path || null;
+  
+  // In Tauri v2 withGlobalTauri:true, plugins are NOT automatically attached to window.__TAURI__
+  // We must access them via core.invoke if we are not using the bundler/npm imports.
+  
+  dialog = tauri.dialog || (core ? {
+    save: (opts) => core.invoke('plugin:dialog|save', opts),
+    open: (opts) => core.invoke('plugin:dialog|open', opts),
+    message: (msg, opts) => core.invoke('plugin:dialog|message', { message: msg, ...opts }),
+    ask: (msg, opts) => core.invoke('plugin:dialog|ask', { message: msg, ...opts }),
+    confirm: (msg, opts) => core.invoke('plugin:dialog|confirm', { message: msg, ...opts }),
+  } : null);
+
+  fs = tauri.fs || (core ? {
+    writeFile: (path, contents) => core.invoke('plugin:fs|write_file', { 
+        path, 
+        contents: contents instanceof Uint8Array ? Array.from(contents) : contents 
+    }),
+    readTextFile: (path) => core.invoke('plugin:fs|read_text_file', { path }),
+    exists: (path) => core.invoke('plugin:fs|exists', { path }),
+  } : null);
+
+  http = tauri.http || null; // Handled specially in httpFetch
+
+  // Polyfill path API if missing
+  if (tauri.path) {
+    pathApi = tauri.path;
+  } else if (core && core.invoke) {
+    pathApi = {
+      pictureDir: () => core.invoke('get_picture_dir'),
+      join: (...paths) => core.invoke('resolve_path', { path: paths[0], filename: paths[1] }),
+      dirname: (path) => core.invoke('get_dirname', { path }),
+    };
+  } else {
+    pathApi = null;
+  }
 }
 
 refreshTauriApis();
@@ -27,7 +56,7 @@ const ResponseType = {
 
 function ensureTauriApi() {
   refreshTauriApis();
-  if (!dialog || !fs || !shell || !pathApi) {
+  if (!dialog || !fs || !pathApi) {
     throw new Error("Tauri runtime not available. Please run inside the Tauri window.");
   }
 }
@@ -62,7 +91,7 @@ async function httpFetch(url, options) {
 
 let currentImages = [];
 let currentImageIndex = 0;
-let lastSavedPath = null;
+// lastSavedPath removed
 let currentZoomLevel = 100;
 let currentRotation = 0;
 let isDragging = false;
@@ -82,8 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveFormatSelect = document.getElementById("save-format");
   const fetchButton = document.getElementById("fetch-button");
   const saveButton = document.getElementById("save-button");
-  const copyButton = document.getElementById("copy-button");
-  const openFolderButton = document.getElementById("open-folder-button");
   const defaultPathCheckbox = document.getElementById("default-path");
   const imageDisplay = document.getElementById("image-display");
   const thumbnailsContainer = document.getElementById("thumbnails-container");
@@ -107,8 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fetchButton.addEventListener("click", fetchImages);
   saveButton.addEventListener("click", saveCurrentImage);
-  copyButton.addEventListener("click", copyImageToClipboard);
-  openFolderButton.addEventListener("click", openImageFolder);
   selectAllCheckbox.addEventListener("change", toggleSelectAll);
   batchSaveButton.addEventListener("click", batchSaveSelectedImages);
   zoomInBtn.addEventListener("click", () => changeZoom(10));
@@ -247,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function enableImageControls() {
     saveButton.disabled = false;
-    copyButton.disabled = false;
+    // copyButton and openFolderButton removed
     zoomInBtn.disabled = false;
     zoomOutBtn.disabled = false;
     zoomResetBtn.disabled = false;
@@ -259,8 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function disableImageControls() {
     saveButton.disabled = true;
-    copyButton.disabled = true;
-    openFolderButton.disabled = true;
+    // copyButton and openFolderButton removed
     zoomInBtn.disabled = true;
     zoomOutBtn.disabled = true;
     zoomResetBtn.disabled = true;
@@ -597,66 +621,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       let targetPath = null;
+      const picturesDir = await pathApi.pictureDir();
+      console.log("Picture Dir:", picturesDir);
+
+      if (!picturesDir) {
+        throw "无法获取图片目录，请确保系统路径正常。";
+      }
+
+      const fullPath = await pathApi.join(picturesDir, filename);
+      console.log("Resolved Path:", fullPath);
+
       if (useDefaultPath) {
-        const pictures = await pathApi.pictureDir();
-        targetPath = await pathApi.join(pictures, filename);
+        targetPath = fullPath;
       } else {
         targetPath = await dialog.save({
           title: "保存图像",
-          defaultPath: await pathApi.join(await pathApi.pictureDir(), filename),
+          defaultPath: fullPath,
           filters: [{ name: "Images", extensions: ["jpg", "png"] }]
         });
       }
 
       if (!targetPath) {
+        console.log("User cancelled save");
         return;
       }
 
-      await fs.writeFile(targetPath, base64ToUint8Array(imageData));
+      console.log("Saving to:", targetPath);
+      // Ensure data is Uint8Array
+      const dataBytes = base64ToUint8Array(imageData);
+      await fs.writeFile(targetPath, dataBytes);
+      
       alert("图像保存成功！");
-      lastSavedPath = targetPath;
-      openFolderButton.disabled = false;
+      // lastSavedPath code removed
     } catch (error) {
       console.error("Error saving image:", error);
-      alert(`保存失败: ${error.message}`);
+      const msg = typeof error === 'string' ? error : (error.message || JSON.stringify(error));
+      alert(`保存失败: ${msg}`);
     }
   }
 
-  async function copyImageToClipboard() {
-    if (!currentImages || !currentImages[currentImageIndex]) return;
-
-    const imageData = currentImages[currentImageIndex].data;
-    const format = currentImages[currentImageIndex].info?.format || "jpeg";
-    const mimeType = formatToMime(format);
-
-    try {
-      const blob = base64ToBlob(imageData, mimeType);
-      await navigator.clipboard.write([
-        new ClipboardItem({ [mimeType]: blob })
-      ]);
-      alert("图像已复制到剪贴板");
-    } catch (error) {
-      console.error("Error copying image to clipboard:", error);
-      alert(`复制失败: ${error.message}`);
-    }
-  }
-
-  async function openImageFolder() {
-    if (!lastSavedPath) {
-      alert("请先保存图片");
-      return;
-    }
-
-    ensureTauriApi();
-
-    try {
-      const folderPath = await pathApi.dirname(lastSavedPath);
-      await shell.open(folderPath);
-    } catch (error) {
-      console.error("Error opening folder:", error);
-      alert("打开文件夹时出错");
-    }
-  }
+  // copyImageToClipboard removed
+  
+  // openImageFolder removed
 
   function changeZoom(delta) {
     if (isFitMode) {
@@ -1056,3 +1062,5 @@ function formatToMime(format) {
   if (normalized === "webp") return "image/webp";
   return "image/jpeg";
 }
+
+// convertBlobToPng removed

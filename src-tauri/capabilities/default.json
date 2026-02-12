@@ -10,12 +10,18 @@
       "allow": [
         "https://cnmiw.com/*",
         "https://setu.iw233.top/*",
-        "https://*.iw233.top/*"
+        "https://*.iw233.top/*",
+        "https://weibo.com/*",
+        "https://*.weibo.com/*",
+        "https://*.sinaimg.cn/*"
       ]
     },
     "dialog:default",
     "fs:default",
-    "shell:default",
+    "fs:allow-picture-write",
+    "fs:allow-download-write",
+    "fs:allow-desktop-write",
+    "fs:allow-write-file",
     "core:webview:allow-internal-toggle-devtools"
   ]
 }

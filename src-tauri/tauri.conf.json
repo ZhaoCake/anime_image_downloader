@@ -1,6 +1,6 @@
 {
   "productName": "AnimeImageDownloader",
-  "version": "0.1.4",
+  "version": "0.2.2",
   "identifier": "com.islandwind.imyourfans",
   "build": {
     "beforeDevCommand": "npm run frontend:dev",
