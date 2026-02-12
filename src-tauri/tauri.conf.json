@@ -3,10 +3,10 @@
   "version": "0.2.2",
   "identifier": "com.islandwind.imyourfans",
   "build": {
-    "beforeDevCommand": "npm run frontend:dev",
-    "beforeBuildCommand": "npm run frontend:build",
-    "devUrl": "http://localhost:1421",
-    "frontendDist": "../frontend"
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
   },
   "app": {
     "withGlobalTauri": true,
