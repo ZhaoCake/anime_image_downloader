@@ -35,8 +35,15 @@ Install a recent Flutter SDK, Android toolchain, and Linux/Windows desktop build
 ## Release artifacts
 
 - Android APK
-- Linux bundle archive
-- Windows bundle archive
+- Linux portable zip
+- Linux AppImage installer
+- Windows portable zip
+- Windows installer exe
+
+## Release notes
+
+- `0.3.0`: initial Flutter cross-platform release with cnmiw-compatible browsing, saving, settings, flake dev shell, and GitHub Actions publishing.
+- `0.3.1`: optimize gallery caching, add richer viewer controls and shortcuts, include image diagnostics in the info panel, and publish portable plus installer desktop artifacts.
 
 ## API details
 

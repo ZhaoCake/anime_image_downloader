@@ -24,11 +24,16 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
+      - name: Rename APK artifact
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME}"
+          cp build/app/outputs/flutter-apk/app-release.apk "anime-image-downloader-${TAG_NAME}-android.apk"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/*.apk
+          path: anime-image-downloader-*-android.apk
 
   build-linux:
     runs-on: ubuntu-latest
@@ -36,7 +41,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Linux build deps
-        run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev cmake clang pkg-config
+        run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev cmake clang pkg-config libfuse2 zip
 
       - uses: subosito/flutter-action@v2
         with:
@@ -48,14 +53,43 @@ jobs:
       - name: Build Linux
         run: flutter build linux --release
 
-      - name: Archive Linux bundle
-        run: cd build/linux/x64/release/bundle && zip -r ../../../../../linux-bundle.zip .
+      - name: Archive Linux portable bundle
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME}"
+          cd build/linux/x64/release/bundle
+          zip -r ../../../../../anime-image-downloader-${TAG_NAME}-linux-portable.zip .
+
+      - name: Build AppImage
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME}"
+          curl -L -o appimagetool.AppImage https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool.AppImage
+          mkdir -p AppDir/usr/bin AppDir/usr/lib AppDir/usr/share/applications
+          cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
+          cat > AppDir/AppRun <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/anime_image_downloader_flutter" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          cat > AppDir/anime-image-downloader.desktop <<'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=Anime Image Downloader
+          Exec=anime_image_downloader_flutter
+          Icon=anime-image-downloader
+          Categories=Graphics;Viewer;
+          EOF
+          cp assets/icons/placeholder.png AppDir/anime-image-downloader.png
+          ARCH=x86_64 ./appimagetool.AppImage AppDir "anime-image-downloader-${TAG_NAME}-linux-appimage.AppImage"
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-bundle
-          path: linux-bundle.zip
+          name: linux-artifacts
+          path: |
+            anime-image-downloader-*-linux-portable.zip
+            anime-image-downloader-*-linux-appimage.AppImage
 
   build-windows:
     runs-on: windows-latest
@@ -72,14 +106,45 @@ jobs:
       - name: Build Windows
         run: flutter build windows --release
 
-      - name: Archive Windows bundle
-        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath windows-bundle.zip
+      - name: Archive Windows portable bundle
+        shell: pwsh
+        run: |
+          $tag = "${env:GITHUB_REF_NAME}"
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "anime-image-downloader-$tag-windows-portable.zip"
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          $tag = "${env:GITHUB_REF_NAME}"
+          choco install innosetup --no-progress -y
+          @"
+          [Setup]
+          AppId={{F7095B7E-2EEB-49E6-A7FD-CFFDA2D11B5E}
+          AppName=Anime Image Downloader
+          AppVersion=$tag
+          DefaultDirName={autopf}\Anime Image Downloader
+          DefaultGroupName=Anime Image Downloader
+          OutputDir=.
+          OutputBaseFilename=anime-image-downloader-$tag-windows-installer
+          Compression=lzma
+          SolidCompression=yes
+
+          [Files]
+          Source: "build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+
+          [Icons]
+          Name: "{group}\Anime Image Downloader"; Filename: "{app}\anime_image_downloader_flutter.exe"
+          Name: "{commondesktop}\Anime Image Downloader"; Filename: "{app}\anime_image_downloader_flutter.exe"
+          "@ | Set-Content installer.iss
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-bundle
-          path: windows-bundle.zip
+          name: windows-artifacts
+          path: |
+            anime-image-downloader-*-windows-portable.zip
+            anime-image-downloader-*-windows-installer.exe
 
   publish:
     needs: [build-android, build-linux, build-windows]
@@ -94,5 +159,5 @@ jobs:
         with:
           files: |
             artifacts/android-apk/*.apk
-            artifacts/linux-bundle/*.zip
-            artifacts/windows-bundle/*.zip
+            artifacts/linux-artifacts/*
+            artifacts/windows-artifacts/*
