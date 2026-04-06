@@ -21,6 +21,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Generate launcher icons
+        run: flutter pub run flutter_launcher_icons
+
       - name: Build APK
         run: flutter build apk --release
 
@@ -49,6 +52,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Generate launcher icons
+        run: flutter pub run flutter_launcher_icons
 
       - name: Build Linux
         run: flutter build linux --release
@@ -80,7 +86,7 @@ jobs:
           Icon=anime-image-downloader
           Categories=Graphics;Viewer;
           EOF
-          cp assets/icons/placeholder.png AppDir/anime-image-downloader.png
+          cp docs/assets/asuka.jpg AppDir/anime-image-downloader.png
           ARCH=x86_64 ./appimagetool.AppImage AppDir "anime-image-downloader-${TAG_NAME}-linux-appimage.AppImage"
 
       - name: Upload Linux artifact
@@ -102,6 +108,10 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Generate launcher icons
+        shell: pwsh
+        run: flutter pub run flutter_launcher_icons
 
       - name: Build Windows
         run: flutter build windows --release
@@ -146,8 +156,76 @@ jobs:
             anime-image-downloader-*-windows-portable.zip
             anime-image-downloader-*-windows-installer.exe
 
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate platform files
+        run: flutter create --platforms=macos .
+
+      - name: Generate launcher icons
+        run: |
+          flutter pub run flutter_launcher_icons
+
+      - name: Build macOS
+        run: flutter build macos --release
+
+      - name: Archive macOS app
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME}"
+          ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/anime_image_downloader_flutter.app "anime-image-downloader-${TAG_NAME}-macos-app.zip"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: anime-image-downloader-*-macos-app.zip
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate platform files
+        run: flutter create --platforms=ios .
+
+      - name: Generate launcher icons
+        run: |
+          flutter pub run flutter_launcher_icons
+
+      - name: Build iOS without codesign
+        run: flutter build ios --release --no-codesign
+
+      - name: Archive iOS app payload
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME}"
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          ditto -c -k --sequesterRsrc --keepParent Payload "anime-image-downloader-${TAG_NAME}-ios-unsigned.zip"
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-artifacts
+          path: anime-image-downloader-*-ios-unsigned.zip
+
   publish:
-    needs: [build-android, build-linux, build-windows]
+    needs: [build-android, build-linux, build-windows, build-macos, build-ios]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -159,5 +237,7 @@ jobs:
         with:
           files: |
             artifacts/android-apk/*.apk
+            artifacts/ios-artifacts/*
             artifacts/linux-artifacts/*
+            artifacts/macos-artifacts/*
             artifacts/windows-artifacts/*

@@ -110,8 +110,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 subtitle: Text('当前保留上限：${settings.cacheItemLimit} 张'),
               ),
               Slider(
-                min: 40,
-                max: 240,
+                min: 12,
+                max: 72,
                 divisions: 10,
                 label: '${settings.cacheItemLimit}',
                 value: settings.cacheItemLimit.toDouble(),
@@ -123,7 +123,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                '说明：非 CDN 分类会自动附加 Referer: https://weibo.com/，保存图片时也会沿用同样的请求策略。缓存上限越高，回滚列表时越不容易重新渲染，但会占用更多内存。',
+                '说明：非 CDN 分类会自动附加 Referer: https://weibo.com/，保存图片时也会沿用同样的请求策略。当前默认按平均 3 MB/张估算，将短期缓存限制为 24 张，避免列表回滚流畅性与内存占用失衡。',
               ),
             ],
           );

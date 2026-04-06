@@ -6,7 +6,9 @@ class AppSettings {
   });
 
   static const defaultBaseUrl = 'https://cnmiw.com';
-  static const defaultCacheItemLimit = 120;
+  // Average source images are around 3 MB, so 24 cached items stays near
+  // 72 MB on disk while keeping a short scroll-back window responsive.
+  static const defaultCacheItemLimit = 24;
 
   final String baseUrl;
   final String? defaultDirectory;

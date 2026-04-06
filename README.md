@@ -5,7 +5,9 @@ Cross-platform image browser and downloader for cnmiw-compatible anime image API
 ## Targets
 
 - Android
+- iOS
 - Linux
+- macOS
 - Windows
 
 ## Features
@@ -35,8 +37,10 @@ Install a recent Flutter SDK, Android toolchain, and Linux/Windows desktop build
 ## Release artifacts
 
 - Android APK
+- iOS unsigned app zip
 - Linux portable zip
 - Linux AppImage installer
+- macOS app zip
 - Windows portable zip
 - Windows installer exe
 
@@ -44,6 +48,7 @@ Install a recent Flutter SDK, Android toolchain, and Linux/Windows desktop build
 
 - `0.3.0`: initial Flutter cross-platform release with cnmiw-compatible browsing, saving, settings, flake dev shell, and GitHub Actions publishing.
 - `0.3.1`: optimize gallery caching, add richer viewer controls and shortcuts, include image diagnostics in the info panel, and publish portable plus installer desktop artifacts.
+- `0.4.0`: switch to the new project icon, reduce default cache limits for large curated images, and move iOS/macOS platform generation and publishing into GitHub Actions.
 
 ## API details
 

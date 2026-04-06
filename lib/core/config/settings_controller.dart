@@ -27,7 +27,7 @@ class CacheConfiguration {
 
   int get memoryImageLimit => itemLimit;
 
-  int get memoryBytesLimit => itemLimit * 1024 * 1024;
+  int get memoryBytesLimit => itemLimit * 4 * 1024 * 1024;
 }
 
 class SettingsController extends AsyncNotifier<AppSettings> {
