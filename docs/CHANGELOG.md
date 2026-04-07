@@ -6,6 +6,7 @@
 - lower the default short-term cache limit to 24 images for large 3 MB average sources
 - configure GitHub Actions to generate iOS and macOS platform folders on the runner and publish their build artifacts
 - generate launcher icons per platform in CI so existing Android/Linux/Windows builds are not blocked by missing Apple directories
+- raise the generated macOS deployment target to 11.0 in CI so the `gal` plugin can be linked successfully
 
 ## 0.3.1
 

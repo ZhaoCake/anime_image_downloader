@@ -171,6 +171,20 @@ jobs:
       - name: Generate platform files
         run: flutter create --platforms=macos .
 
+      - name: Raise macOS deployment target
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          podfile = Path('macos/Podfile')
+          project = Path('macos/Runner.xcodeproj/project.pbxproj')
+          for path in (podfile, project):
+              text = path.read_text()
+              text = text.replace("'10.14'", "'11.0'")
+              text = text.replace('MACOSX_DEPLOYMENT_TARGET = 10.14;', 'MACOSX_DEPLOYMENT_TARGET = 11.0;')
+              text = text.replace('MACOSX_DEPLOYMENT_TARGET = 10.15;', 'MACOSX_DEPLOYMENT_TARGET = 11.0;')
+              path.write_text(text)
+          PY
+
       - name: Generate launcher icons
         run: |
           flutter pub run flutter_launcher_icons -f tool/launcher_icons/macos.yaml
