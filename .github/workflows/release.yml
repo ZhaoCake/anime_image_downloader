@@ -22,7 +22,7 @@ jobs:
         run: flutter pub get
 
       - name: Generate launcher icons
-        run: flutter pub run flutter_launcher_icons
+        run: flutter pub run flutter_launcher_icons -f tool/launcher_icons/android.yaml
 
       - name: Build APK
         run: flutter build apk --release
@@ -54,7 +54,7 @@ jobs:
         run: flutter pub get
 
       - name: Generate launcher icons
-        run: flutter pub run flutter_launcher_icons
+        run: flutter pub run flutter_launcher_icons -f tool/launcher_icons/android.yaml
 
       - name: Build Linux
         run: flutter build linux --release
@@ -111,7 +111,7 @@ jobs:
 
       - name: Generate launcher icons
         shell: pwsh
-        run: flutter pub run flutter_launcher_icons
+        run: flutter pub run flutter_launcher_icons -f tool/launcher_icons/windows.yaml
 
       - name: Build Windows
         run: flutter build windows --release
@@ -173,7 +173,7 @@ jobs:
 
       - name: Generate launcher icons
         run: |
-          flutter pub run flutter_launcher_icons
+          flutter pub run flutter_launcher_icons -f tool/launcher_icons/macos.yaml
 
       - name: Build macOS
         run: flutter build macos --release
@@ -206,7 +206,7 @@ jobs:
 
       - name: Generate launcher icons
         run: |
-          flutter pub run flutter_launcher_icons
+          flutter pub run flutter_launcher_icons -f tool/launcher_icons/ios.yaml
 
       - name: Build iOS without codesign
         run: flutter build ios --release --no-codesign

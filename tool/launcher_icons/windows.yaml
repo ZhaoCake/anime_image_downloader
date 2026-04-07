@@ -1,0 +1,11 @@
+flutter_launcher_icons:
+  android: false
+  ios: false
+  web:
+    generate: false
+  windows:
+    generate: true
+    image_path: docs/assets/asuka.jpg
+    icon_size: 256
+  macos:
+    generate: false

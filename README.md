@@ -50,6 +50,8 @@ Install a recent Flutter SDK, Android toolchain, and Linux/Windows desktop build
 - `0.3.1`: optimize gallery caching, add richer viewer controls and shortcuts, include image diagnostics in the info panel, and publish portable plus installer desktop artifacts.
 - `0.4.0`: switch to the new project icon, reduce default cache limits for large curated images, and move iOS/macOS platform generation and publishing into GitHub Actions.
 
+Launcher icons are generated per platform in CI from `docs/assets/asuka.jpg` using the configs in `tool/launcher_icons/`.
+
 ## API details
 
 See `docs/API_USAGE.md`.

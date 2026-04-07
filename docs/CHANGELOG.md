@@ -5,6 +5,7 @@
 - replace project branding assets with `docs/assets/asuka.jpg`
 - lower the default short-term cache limit to 24 images for large 3 MB average sources
 - configure GitHub Actions to generate iOS and macOS platform folders on the runner and publish their build artifacts
+- generate launcher icons per platform in CI so existing Android/Linux/Windows builds are not blocked by missing Apple directories
 
 ## 0.3.1
 
