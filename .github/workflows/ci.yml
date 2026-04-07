@@ -103,14 +103,21 @@ jobs:
       - name: Raise macOS deployment target
         run: |
           python - <<'PY'
+          import re
           from pathlib import Path
-          podfile = Path('macos/Podfile')
-          project = Path('macos/Runner.xcodeproj/project.pbxproj')
-          for path in (podfile, project):
+          files = [
+              Path('macos/Podfile'),
+              Path('macos/Flutter/ephemeral/.symlinks/flutter/darwin/macos/FlutterMacOS.podspec'),
+              Path('macos/Runner/Configs/AppInfo.xcconfig'),
+              Path('macos/Runner.xcodeproj/project.pbxproj'),
+          ]
+          for path in files:
+              if not path.exists():
+                  continue
               text = path.read_text()
-              text = text.replace("'10.14'", "'11.0'")
-              text = text.replace('MACOSX_DEPLOYMENT_TARGET = 10.14;', 'MACOSX_DEPLOYMENT_TARGET = 11.0;')
-              text = text.replace('MACOSX_DEPLOYMENT_TARGET = 10.15;', 'MACOSX_DEPLOYMENT_TARGET = 11.0;')
+              text = re.sub(r"platform :osx, '\d+(?:\.\d+)?'", "platform :osx, '11.0'", text)
+              text = re.sub(r'MACOSX_DEPLOYMENT_TARGET = \d+(?:\.\d+)?;', 'MACOSX_DEPLOYMENT_TARGET = 11.0;', text)
+              text = re.sub(r'macosx.deployment_target\s*=\s*\d+(?:\.\d+)?', 'macosx.deployment_target = 11.0', text)
               path.write_text(text)
           PY
 
@@ -118,7 +125,7 @@ jobs:
         run: flutter pub run flutter_launcher_icons -f tool/launcher_icons/macos.yaml
 
       - name: Build macOS
-        run: flutter build macos --debug
+        run: flutter build macos --debug -v
 
   build-ios:
     runs-on: macos-latest
